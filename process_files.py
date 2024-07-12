@@ -1,5 +1,6 @@
 import asyncio
 import argparse
+import io
 import weaviate
 import os
 from dotenv import load_dotenv
@@ -68,6 +69,15 @@ async def process_and_upload_text(file_path):
 async def process_and_upload_pdf(file_path):
     # Initialize the PDF processor
     processor = PDFSemanticProcessor(buffer_size=1)
+    with open(file_path, 'rb') as file:
+        file_stream = io.BytesIO(file.read())
+    text = processor.extract_text_from_pdf(file_stream)
+    
+    # Save the normally extracted text to a file
+    extracted_text_file = 'extracted_text.txt'
+    with open(extracted_text_file, 'w', encoding='utf-8') as file:
+        file.write(text)
+
     result = await processor.process(file_path)
     chunks = result['content']
     upload_chunks(chunks, file_path)
